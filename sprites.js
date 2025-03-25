@@ -93,9 +93,10 @@ class EnemySprite extends Sprite {
 
     this.moving.isMoving = true;
 
-    if (this.position.x - this.width - this.velocity <= 0) {
-      this.switchDirection();
-    } else if (this.position.x + this.width + this.velocity >= canvas.width) {
+    const isAtLeftBoundary = this.position.x <= 0;
+    const isAtRightBoundary = this.position.x + this.width >= canvas.width;
+
+    if (isAtLeftBoundary || isAtRightBoundary) {
       this.switchDirection();
     }
     
