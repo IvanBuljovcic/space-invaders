@@ -81,7 +81,9 @@ function animate() {
   }
 
   // Request next animation frame
-  requestAnimationFrame(animate);
+  const animFrame = requestAnimationFrame(animate);
+
+  winState(animFrame);
 }
 
 
@@ -121,6 +123,13 @@ function bulletCollision({ projectiles, enemies }) {
   }
 }
 
+function winState(id) {
+  if (!enemies.length) {
+    document.querySelector('.victory').style.visibility = 'visible';
+    cancelAnimationFrame(id)
+  }
+}
+
 setInterval(() => {
   enemies.forEach((enemy) => enemy.animateMovement());
 }, 1000);
@@ -135,5 +144,5 @@ window.addEventListener("keydown", (e) => {
 
 window.addEventListener("keyup", (e) => delete keysPressed[e.key]);
 
-populateEnemies(10)
+populateEnemies(7)
 animate();

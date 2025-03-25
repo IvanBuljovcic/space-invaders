@@ -66,23 +66,43 @@ class EnemySprite extends Sprite {
     }
   }
 
+  shiftRight() {
+    this.targetX = this.position.x + this.velocity;
+  }
+
+  shiftLeft() {
+    this.targetX = this.position.x - this.velocity;
+  }
+
+  shiftDown() {
+    this.targetY = this.position.y + this.height + 10;
+  }
+
+  switchDirection() {
+    if (this.moving.right) {
+      this.moving.right = false;
+    } else {
+      this.moving.right = true;
+    }
+
+    this.shiftDown();
+  }
+
   animateMovement(duration = 1000) {
     if (this.moving.isMoving) return;
 
     this.moving.isMoving = true;
 
     if (this.position.x - this.width - this.velocity <= 0) {
-      this.moving.right = true;
+      this.switchDirection();
     } else if (this.position.x + this.width + this.velocity >= canvas.width) {
-      this.moving.right = false;
-
-      this.targetY = this.position.y + this.height + 50;
+      this.switchDirection();
     }
     
     if (this.moving.right) {
-      this.targetX = this.position.x + this.velocity;
+      this.shiftRight()
     } else {
-      this.targetX = this.position.x - this.velocity;
+      this.shiftLeft();
     }
 
     const startX = this.position.x;
@@ -94,10 +114,15 @@ class EnemySprite extends Sprite {
       const progress = Math.min(elapsed / duration, 1);
 
       const easedProgress =
-        progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-      this.position.x = startX + (this.targetX - startX) * easedProgress;
-      this.position.y = startY + (this.targetY - startY) * easedProgress;
+      if (Math.round(this.targetY) !== Math.round(this.position.y)) {
+        this.position.y = startY + (this.targetY - startY) * easedProgress;
+      } else {
+        this.position.x = startX + (this.targetX - startX) * easedProgress;
+      }
 
       if (progress < 1) {
         requestAnimationFrame(move);
