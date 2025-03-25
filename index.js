@@ -35,7 +35,7 @@ class BulletSprite extends Sprite {
 }
 
 class EnemySprite extends Sprite {
-  constructor({ position, color = "blue", width = 20, height = 20 }) {
+  constructor({ position, color = "blue", width = 20, height = 20, velocity = 50 }) {
     super({
       position,
       width,
@@ -43,18 +43,29 @@ class EnemySprite extends Sprite {
       color,
     });
     this.targetX = position.x;
-    this.isMoving = false;
+    this.velocity = velocity;
+    this.moving = {
+      isMoving: false,
+      right: true,
+    }
   }
 
-  shiftRight(distance = 50) {
-    this.position.x += distance;
-  }
+  animateMovement(duration = 1000) {
+    if (this.moving.isMoving) return;
 
-  animateMovement(targetX, duration = 1000) {
-    if (this.isMoving) return;
+    this.moving.isMoving = true;
 
-    this.isMoving = true;
-    this.targetX = this.position.x + 50;
+    if (this.position.x - this.width - this.velocity <= 0) {
+      this.moving.right = true;
+    } else if (this.position.x + this.width + this.velocity >= canvas.width) {
+      this.moving.right = false;
+    }
+    
+    if (this.moving.right) {
+      this.targetX = this.position.x + this.velocity;
+    } else {
+      this.targetX = this.position.x - this.velocity;
+    }
 
     const startX = this.position.x;
     const startTime = performance.now();
@@ -71,7 +82,7 @@ class EnemySprite extends Sprite {
       if (progress < 1) {
         requestAnimationFrame(move);
       } else {
-        this.isMoving = false;
+        this.moving.isMoving = false;
       }
     };
 
@@ -129,6 +140,9 @@ function animate() {
     }
   }
 
+  // -- Check bullet colision
+  bulletCollision({ projectiles, enemies });
+
   if (keysPressed["a"]) {
     const collidingLeft = playerSprite.position.x <= 0;
 
@@ -159,6 +173,31 @@ function shootProjectile() {
   projectiles.push(projectile);
 }
 
+function bulletCollision({ projectiles, enemies }) {
+  for (let p in projectiles) {
+    const projectile = projectiles[p];
+
+    for (let e in enemies) {
+      const enemy = enemies[e];
+
+      if (
+        projectile.position.x < enemy.position.x + enemy.width &&
+        projectile.position.x + projectile.width > enemy.position.x &&
+        projectile.position.y < enemy.position.y + enemy.height &&
+        projectile.position.y + projectile.height > enemy.position.y
+      ) {
+        // Delete the projectile
+        projectiles.splice(p, 1);
+
+        // Delete the enemy
+        enemies.splice(e, 1);
+
+        return;
+      }
+    }
+  }
+}
+
 setInterval(() => {
   enemies.forEach((enemy) => enemy.animateMovement());
 }, 1000);
@@ -169,10 +208,9 @@ window.addEventListener("keydown", (e) => {
   if (e.key === " " && projectiles.length <= projectileLimit) {
     shootProjectile();
   }
-  console.log("projectiles: ", projectiles);
 });
 
 window.addEventListener("keyup", (e) => delete keysPressed[e.key]);
 
-populateEnemies(3)
+populateEnemies(10)
 animate();
